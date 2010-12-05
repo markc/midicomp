@@ -1,0 +1,39 @@
+MFile 1 1 384
+MTrk
+000:00:000 Meta SeqName "Track 1"
+000:00:000 On      ch=1   note=c4   vol=70 
+000:00:000 Tempo 500000
+000:00:000 TimeSig 4/4 32 99
+000:00:096 On      ch=1   note=c4   vol=0  
+000:00:096 On      ch=1   note=d4   vol=70 
+000:00:192 On      ch=1   note=d4   vol=0  
+000:00:192 On      ch=1   note=e4   vol=70 
+000:00:288 On      ch=1   note=e4   vol=0  
+000:00:288 On      ch=1   note=f4   vol=70 
+000:01:000 On      ch=1   note=f4   vol=0  
+000:01:000 On      ch=1   note=g4   vol=70 
+000:01:096 On      ch=1   note=g4   vol=0  
+000:01:096 On      ch=1   note=a4   vol=70 
+000:01:192 On      ch=1   note=a4   vol=0  
+000:01:192 On      ch=1   note=b4   vol=70 
+000:01:288 On      ch=1   note=b4   vol=0  
+000:01:288 On      ch=1   note=c5   vol=70 
+000:02:000 On      ch=1   note=c5   vol=0  
+000:02:000 On      ch=1   note=d5   vol=70 
+000:02:096 On      ch=1   note=d5   vol=0  
+000:02:096 On      ch=1   note=c5   vol=70 
+000:02:192 On      ch=1   note=c5   vol=0  
+000:02:192 On      ch=1   note=b4   vol=70 
+000:02:288 On      ch=1   note=b4   vol=0  
+000:02:288 On      ch=1   note=a4   vol=70 
+000:03:000 On      ch=1   note=a4   vol=0  
+000:03:000 On      ch=1   note=g4   vol=70 
+000:03:096 On      ch=1   note=g4   vol=0  
+000:03:096 On      ch=1   note=f4   vol=70 
+000:03:192 On      ch=1   note=f4   vol=0  
+000:03:192 On      ch=1   note=e4   vol=70 
+000:03:288 On      ch=1   note=e4   vol=0  
+000:03:288 On      ch=1   note=d4   vol=70 
+001:00:000 On      ch=1   note=d4   vol=0  
+001:00:000 Meta TrkEnd
+TrkEnd

@@ -1,0 +1,39 @@
+MFile 1 1 384
+MTrk
+0 Meta SeqName "Track 1"
+0 On ch=1 n=48 v=70
+0 Tempo 500000
+0 TimeSig 4/4 32 99
+96 On ch=1 n=48 v=0
+96 On ch=1 n=50 v=70
+192 On ch=1 n=50 v=0
+192 On ch=1 n=52 v=70
+288 On ch=1 n=52 v=0
+288 On ch=1 n=53 v=70
+384 On ch=1 n=53 v=0
+384 On ch=1 n=55 v=70
+480 On ch=1 n=55 v=0
+480 On ch=1 n=57 v=70
+576 On ch=1 n=57 v=0
+576 On ch=1 n=59 v=70
+672 On ch=1 n=59 v=0
+672 On ch=1 n=60 v=70
+768 On ch=1 n=60 v=0
+768 On ch=1 n=62 v=70
+864 On ch=1 n=62 v=0
+864 On ch=1 n=60 v=70
+960 On ch=1 n=60 v=0
+960 On ch=1 n=59 v=70
+1056 On ch=1 n=59 v=0
+1056 On ch=1 n=57 v=70
+1152 On ch=1 n=57 v=0
+1152 On ch=1 n=55 v=70
+1248 On ch=1 n=55 v=0
+1248 On ch=1 n=53 v=70
+1344 On ch=1 n=53 v=0
+1344 On ch=1 n=52 v=70
+1440 On ch=1 n=52 v=0
+1440 On ch=1 n=50 v=70
+1536 On ch=1 n=50 v=0
+1536 Meta TrkEnd
+TrkEnd

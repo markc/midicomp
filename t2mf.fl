@@ -1,0 +1,98 @@
+/* $Id: t2mf.fl,v 1.3 1991/11/15 19:31:00 piet Rel $ */
+
+%{
+
+#include "t2mf.h"
+
+#ifdef NO_YYLENG_VAR
+int yylength;
+#define YY_USER_ACTION	yylength = yyleng
+#endif
+
+int do_hex = 0;
+int eol_seen = 0;
+int lineno = 1;
+long yyval;
+long bankno();
+
+%}
+
+Hex	[0-9a-f]
+
+%x	QUOTE
+%x	HEX
+%%
+	if (do_hex) {
+		BEGIN(HEX);
+		do_hex = 0;
+	}
+	eol_seen = 0;
+		
+<INITIAL,HEX>[ \t\r]		/* skip whitespace */;
+<INITIAL,HEX>"#".*\n		/* skip comment */ lineno++;
+
+MFile		return MTHD;
+MTrk		return MTRK;
+TrkEnd		return TRKEND;
+
+On		return ON;
+Off		return OFF;
+Po(ly)?Pr	return POPR;
+Par(am)?	return PAR;
+Pb		return PB;
+Pr(og)?Ch	return PRCH;
+Ch(an)?Pr	return CHPR;
+SysEx		return SYSEX;
+Meta		return META;
+SeqSpec		return SEQSPEC;
+Text		return TEXT;
+Copyright	return COPYRIGHT;
+TrkName|SeqName		return SEQNAME;
+InstrName	return INSTRNAME;
+Lyric		return LYRIC;
+Marker		return MARKER;
+Cue		return CUE;
+SeqNr		return SEQNR;
+KeySig		return KEYSIG;
+Tempo		return TEMPO;
+TimeSig		return TIMESIG;
+SMPTE		return SMPTE;
+Arb		return ARB;
+[:/]		return '/';
+
+minor		return MINOR;
+major		return MAJOR;
+
+ch=		return CH;
+n(ote)?=	return NOTE;
+v([oa]l)?=	return VAL;
+c(on)?=		return CON;
+p(rog)?=	return PROG;
+
+[-+]?[0-9]+		sscanf (yytext, "%ld", &yyval); return INT;
+0x{Hex}+		sscanf (yytext+2, "%lx", &yyval); return INT;
+\$[A-H1-8]+		yyval = bankno (yytext+1, yyleng-1); return INT;
+<HEX>{Hex}{Hex}?	sscanf (yytext, "%lx", &yyval); return INT;
+
+[a-g][#b+-]?[0-9]+	return NOTEVAL;
+
+<INITIAL,HEX>\"		BEGIN (QUOTE);
+<QUOTE>[^\\"\n]*	yymore();
+<QUOTE>\"		BEGIN (0); return STRING;
+<QUOTE>\\(.|\n)		yymore();
+<QUOTE>\n		{ error ("unterminated string");
+			  lineno++; eol_seen++; BEGIN(0); return EOL;
+			}
+<QUOTE><<EOF>>		error ("EOF in string"); return EOF;
+
+<INITIAL,HEX>\\[ \t\r]*\n	lineno++;
+<INITIAL,HEX>\n		lineno++; eol_seen++; BEGIN(0); return EOL;
+
+<HEX>[g-z][a-z]+	BEGIN (0); return ERR;
+<HEX>.			BEGIN (0); return ERR;
+[a-z]+			return ERR;
+.			return ERR;
+
+<<EOF>>			return EOF;
+
+%%
