@@ -17,4 +17,5 @@ OTHER_FILES += \
     Makefile.orig \
     ex1.mid \
     ex1-verbose.txt \
-    ex1-plain.txt
+    ex1-plain.txt \
+    .gitignore
