@@ -18,7 +18,7 @@ any script language, and "recompiled" back into a binary SMF file.
 * v0.0.2 20070722 Fixed gcc4+ compiler bug and exit warnings
 * v0.0.1 20031129 Initial release, combined mf2t+t2fm, added getopt args
 
-Command line argument usage:
+Command line argument usage
 
     -d  --debug     send any debug output to stderr
     -v  --verbose   output in columns with notes on
@@ -27,19 +27,19 @@ Command line argument usage:
     -t  --time      use absolute time instead of ticks
     -fN --fold=N    fold sysex data at N columns
 
-To translate a SMF file to plain ascii format:
+To translate a SMF file to plain ascii format
 
     midicomp some.mid                   # to view as plain text
     midicomp some.mid > some.asc        # to create a text version
 
-To translate a plain ascii formatted file to SMF:
+To translate a plain ascii formatted file to SMF
 
     midicomp -c some.asc some.mid       # input and output filenames
     midicomp -c some.mid < some.asc     # input from stdin with one arg
 
     midicomp some.mid | somefilter | midicomp -c some2.mid
 
-## Format of the textfile:
+## Format of the textfile
 
     File header:            Mfile <format> <ntrks> <division>
     Start of track:         MTrk
@@ -66,7 +66,7 @@ To translate a plain ascii formatted file to SMF:
     Sequencer specific:     SeqSpec <type> <hex>
     Misc meta events:       Meta <type> <hex>
 
-### The <> have the following meaning:
+### The <> have the following meaning
 
     <ch>                    ch=<num>
     <note>                  n=<noteval>  [note=<noteval>]
@@ -83,7 +83,7 @@ To translate a plain ascii formatted file to SMF:
                             separated by space
     <string>                a string between double quotes (like "text").
 
-## Misc notes:
+## Misc notes
 
 Channel numbers are 1-based, all other numbers are as they appear in the
 midifile.
