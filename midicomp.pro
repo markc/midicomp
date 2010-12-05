@@ -18,4 +18,5 @@ OTHER_FILES += \
     ex1.mid \
     ex1-verbose.txt \
     ex1-plain.txt \
-    .gitignore
+    .gitignore \
+    README.md
