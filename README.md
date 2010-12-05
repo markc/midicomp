@@ -88,13 +88,13 @@ To translate a plain ascii formatted file to SMF
 Channel numbers are 1-based, all other numbers are as they appear in the
 midifile.
 
-<division> is either a positive number (giving the time resolution in
+`<division>` is either a positive number (giving the time resolution in
 clicks per quarter note) or a negative number followed by a positive
 number (giving SMPTE timing).
 
-<format> <ntrks> <num> are decimal numbers.
+`<format> <ntrks> <num>` are decimal numbers.
 
-The <num> in the Pb is the real value (two midibytes combined)
+The `<num>` in the Pb is the real value (two midibytes combined)
 
 In Tempo it is a long (32 bits) value. Others are in the interval 0-127
 
@@ -105,9 +105,9 @@ In a string certain characters are escaped:
 " and \ are escaped with a \
 a zero byte is written as \0
 CR and LF are written as \r and \n respectively
-other non-printable characters are written as \x<2 hex digits>
+other non-printable characters are written as `\x<2 hex digits>`
 When -f is given long strings and long hex sequences are folded by inserting
-\<newline><tab>. If in a string the next character would be a space or
+`\<newline><tab>`. If in a string the next character would be a space or
 tab it will be escaped by \
 
 midicomp will accept all formats that mf2t can produce, plus a number of
@@ -137,10 +137,10 @@ digit, digits 1-8 allowed). The letters a-h may also be used for 1-8.
 The input is checked for correctness but not extensively. An
 errormessage will generally imply that the resulting midifile is illegal.
 
-channel number can be recognized by the regular expression /ch=/.
-note numbers by /n=/ or /note=/, program numbers by /p=/ or /prog=/.
-Meta events by /^Meta/ or /^SeqSpec/.
-Text events by /"/, continued lines by /\\$/, continuation lines by /$\t/
+channel number can be recognized by the regular expression `/ch=/`.
+note numbers by `/n=/` or `/note=/`, program numbers by `/p=/` or `/prog=/`.
+Meta events by `/^Meta/` or `/^SeqSpec/`.
+Text events by `/"/`, continued lines by `/\\$/`, continuation lines by `/$\t/`
 (that was a TAB character).
 
 ## Examples
