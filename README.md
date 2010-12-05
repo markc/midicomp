@@ -2,16 +2,17 @@
 
 ### v0.0.5 20101205 markc@renta.net
 
-A program to manipulate SMF (Standard MIDI File) files. midicomp will
+A program to manipulate SMF (Standard MIDI File) files. `midicomp` will
 both read and write SMF files in 0 or format 1 and also read and write
 it's own plain text format. This means a SMF file can be turned into
 easily parseble text, edited with any text editor or filtered through
 any script language, and "recompiled" back into a binary SMF file.
 
-Originally based on mf2t/t2fm by Piet van Oostrum and others. It should
-build on any linux simply by typing "make" in the source directory.
+* Copyright 2003-2010 Mark Constable (markc@renta.net)
+* License AGPLv3 - http://www.gnu.org/licenses/agpl.html
+* Originally based on mf2t/t2fm by Piet van Oostrum
 
-### Changes:
+### Changes
 
 v0.0.5 20101205 Set up to compile from Qt Creator
 v0.0.2 20070722 Fixed gcc4+ compiler bug and exit warnings
