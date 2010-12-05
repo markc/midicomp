@@ -1,14 +1,15 @@
 /* $Id: midifile.h,v 1.3 1991/11/03 21:50:50 piet Rel $ */
 
-static readtrack();
-static badbyte();
-static metaevent();
-static sysex();
-static chanmessage();
-static msginit();
-static msgleng();
-static msgadd();
-static biggermsg();
+static void badbyte();
+
+static int readtrack();
+static int metaevent();
+static int sysex();
+static int chanmessage();
+static int msginit();
+static int msgleng();
+static int msgadd();
+static int biggermsg();
 
 /* definitions for MIDI file parsing code */
 extern int (*Mf_getc)();

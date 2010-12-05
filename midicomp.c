@@ -155,7 +155,7 @@ if (dbg) fprintf(stderr,"Compiling %s to %s\n",infile,outfile);
     }
 }
 
-mfread() {
+void mfread() {
 
     if (Mf_getc == NULLFUNC)
         mferror("mfread() called without setting Mf_getc");
@@ -164,7 +164,7 @@ mfread() {
     while(readtrack()) ;
 }
 
-static readmt(char *s) {
+static int readmt(char *s) {
 
     int n = 0;
     char *p = s;
@@ -181,7 +181,7 @@ static readmt(char *s) {
     return(c);
 }
 
-static egetc() {
+static int egetc() {
 
     int c = (*Mf_getc)();
 
@@ -204,7 +204,7 @@ static void readheader() {
     while(Mf_toberead > 0) (void) egetc();
 }
 
-static readtrack() {
+static int readtrack() {
 
     long lookfor;
     int c, c1, type;
@@ -281,7 +281,7 @@ static readtrack() {
     return(1);
 }
 
-static badbyte(int c) {
+static void badbyte(int c) {
 
     char buff[32];
 
@@ -289,7 +289,7 @@ static badbyte(int c) {
     mferror(buff);
 }
 
-static metaevent(type) {
+static int metaevent(int type) {
 
     int leng = msgleng();
     char *m = msg();
@@ -340,12 +340,12 @@ static metaevent(type) {
     }
 }
 
-static sysex() {
+static int sysex() {
 
     if (Mf_sysex) (*Mf_sysex)(msgleng(),msg());
 }
 
-static chanmessage(int status,int c1,int c2) {
+static int chanmessage(int status, int c1, int c2) {
 
     int chan = status & 0xf;
 
@@ -377,7 +377,7 @@ static long readvarinum() {
     return (value);
 }
 
-static long to32bit(c1,c2,c3,c4) {
+static long to32bit(int c1, int c2, int c3, int c4) {
 
     long value = 0L;
 
@@ -388,7 +388,7 @@ static long to32bit(c1,c2,c3,c4) {
     return (value);
 }
 
-static to16bit(int c1,int c2) {
+static int to16bit(int c1, int c2) {
 
     return ((c1 & 0xff ) << 8) + (c2 & 0xff);
 }
@@ -404,7 +404,7 @@ static long read32bit() {
     return to32bit(c1,c2,c3,c4);
 }
 
-static read16bit() {
+static int read16bit() {
 
     int c1, c2;
     c1 = egetc();
@@ -412,13 +412,13 @@ static read16bit() {
     return to16bit(c1,c2);
 }
 
-mferror(char *s) {
+void mferror(char *s) {
 
     if (Mf_error) (*Mf_error)(s);
     exit(1);
 }
 
-static msginit() {
+static void msginit() {
 
     Msgindex = 0;
 }
@@ -428,18 +428,18 @@ static char * msg() {
     return(Msgbuff);
 }
 
-static msgleng() {
+static int msgleng() {
 
     return(Msgindex);
 }
 
-static msgadd(int c) {
+static void msgadd(int c) {
 
     if (Msgindex >= Msgsize) biggermsg();
     Msgbuff[Msgindex++] = c;
 }
 
-static biggermsg() {
+static void biggermsg() {
 
     char *newmess;
     char *oldmess = Msgbuff;
@@ -481,9 +481,9 @@ int which_track;
 FILE *fp;
 int (*wtrack)();
 {
-    unsigned long trkhdr,trklength;
+    unsigned long trkhdr, trklength;
     long offset, place_marker;
-    void write16bit(),write32bit();
+    void write16bit(), write32bit();
     
     trkhdr = MTrk;
     trklength = 0;
@@ -671,7 +671,7 @@ char *mknote(int pitch) {
     return buf;
 }
 
-myheader(int format,int ntrks,int division) {
+void myheader(int format,int ntrks,int division) {
 
     if (division & 0x8000) {
         times = 0;
@@ -688,86 +688,86 @@ myheader(int format,int ntrks,int division) {
     TrksToDo = ntrks;
 }
 
-mytrstart() {
+void mytrstart() {
 
     printf("MTrk\n");
     TrkNr ++;
 }
 
-mytrend() {
+void mytrend() {
 
     printf("TrkEnd\n");
     --TrksToDo;
 }
 
-mynon(int chan,int pitch,int vol) {
+void mynon(int chan, int pitch, int vol) {
 
     prtime();
-    printf(Onmsg,chan+1,mknote(pitch),vol);
+    printf(Onmsg, chan+1, mknote(pitch), vol);
 }
 
-mynoff(int chan,int pitch,int vol) {
+void mynoff(int chan, int pitch, int vol) {
 
     prtime();
     printf(Offmsg,chan+1,mknote(pitch),vol);
 }
 
-mypressure(int chan,int pitch,int press) {
+void mypressure(int chan, int pitch, int press) {
 
     prtime();
-    printf(PoPrmsg,chan+1,mknote(pitch),press);
+    printf(PoPrmsg, chan+1, mknote(pitch), press);
 }
 
-myparameter(int chan,int control,int value) {
+void myparameter(int chan, int control, int value) {
 
     prtime();
-    printf(Parmsg,chan+1,control,value);
+    printf(Parmsg, chan+1, control, value);
 }
 
-mypitchbend(int chan,int lsb,int msb) {
+void mypitchbend(int chan, int lsb, int msb) {
 
     prtime();
     printf(Pbmsg,chan+1,128*msb+lsb);
 }
 
-myprogram(int chan,int program) {
+void myprogram(int chan, int program) {
 
     prtime();
-    printf(PrChmsg,chan+1,program);
+    printf(PrChmsg, chan+1, program);
 }
 
-mychanpressure(int chan,int press) {
+void mychanpressure(int chan, int press) {
 
     prtime();
-    printf(ChPrmsg,chan+1,press);
+    printf(ChPrmsg, chan+1, press);
 }
 
-mysysex(int leng,char *mess) {
+void mysysex(int leng, char *mess) {
 
     prtime();
     printf("SysEx");
     prhex (mess, leng);
 }
 
-mymmisc(int type,int leng,char *mess) {
+void mymmisc(int type, int leng, char *mess) {
 
     prtime();
-    printf("Meta 0x%02x",type);
+    printf("Meta 0x%02x", type);
     prhex(mess, leng);
 }
 
-mymspecial(int leng,char *mess) {
+void mymspecial(int leng, char *mess) {
 
     prtime();
     printf("SeqSpec");
     prhex(mess, leng);
 }
 
-mymtext(int type,int leng,char *mess) {
+void mymtext(int type, int leng, char *mess) {
 
     static char *ttype[] = {
         NULL,
-        "Text","Copyright","TrkName","InstrName","Lyric","Marker","Cue","Unrec"
+        "Text", "Copyright", "TrkName", "InstrName", "Lyric", "Marker", "Cue", "Unrec"
     };
     int unrecognized = (sizeof(ttype)/sizeof(char *)) - 1;
     prtime();
@@ -780,75 +780,75 @@ mymtext(int type,int leng,char *mess) {
     prtext (mess, leng);
 }
 
-mymseq(int num) {
+void mymseq(int num) {
 
     prtime();
-    printf("SeqNr %d\n",num);
+    printf("SeqNr %d\n", num);
 }
 
-mymeot() {
+void mymeot() {
 
     prtime();
     printf("Meta TrkEnd\n");
 }
 
-mykeysig(int sf,int mi) {
+void mykeysig(int sf, int mi) {
 
     prtime();
-    printf("KeySig %d %s\n",(sf>127?sf-256:sf),(mi?"minor":"major"));
+    printf("KeySig %d %s\n", (sf>127?sf-256:sf), (mi?"minor":"major"));
 }
 
-mytempo(long tempo) {
+void mytempo(long tempo) {
 
     prtime();
-    printf("Tempo %ld\n",tempo);
+    printf("Tempo %ld\n", tempo);
 }
 
-mytimesig(int nn,int dd,int cc,int bb) {
+void mytimesig(int nn, int dd, int cc, int bb) {
 
     int denom = 1;
 
     while (dd-- > 0) denom *= 2;
     prtime();
-    printf("TimeSig %d/%d %d %d\n",nn,denom,cc,bb);
+    printf("TimeSig %d/%d %d %d\n", nn, denom, cc, bb);
     M0 += (Mf_currtime-T0)/(Beat*Measure);
     T0 = Mf_currtime;
     Measure = nn;
     Beat = 4 * Clicks / denom;
 }
 
-mysmpte(int hr,int mn,int se,int fr,int ff) {
+void mysmpte(int hr, int mn, int se, int fr, int ff) {
 
     prtime();
-    printf("SMPTE %d %d %d %d %d\n",hr,mn,se,fr,ff);
+    printf("SMPTE %d %d %d %d %d\n", hr, mn, se, fr, ff);
 }
 
-myarbitrary(int leng,char *mess) {
+void myarbitrary(int leng, char *mess) {
 
     prtime();
-    printf("Arb",leng);
+    printf("Arb", leng);
     prhex(mess, leng);
 }
 
-prtime() {
+void prtime() {
 
     if (times) {
         long m = (Mf_currtime-T0)/Beat;
         if (verbose)
             printf("%03ld:%02ld:%03ld ",
-			    m/Measure+M0,m%Measure,(Mf_currtime-T0)%Beat);
+              m/Measure+M0, m%Measure, (Mf_currtime-T0)%Beat);
         else
             printf("%ld:%ld:%ld ",
-			    m/Measure+M0,m%Measure,(Mf_currtime-T0)%Beat);
+              m/Measure+M0, m%Measure, (Mf_currtime-T0)%Beat);
     } else {
         if (verbose)
-            printf("%-10ld ",Mf_currtime);
+            printf("%-10ld ", Mf_currtime);
         else
-            printf("%ld ",Mf_currtime);
+            printf("%ld ", Mf_currtime);
     }
 }
 
-prtext(unsigned char *p,int leng) {
+void prtext(unsigned char *p, int leng) {
 
     int n, c;
     int pos = 25;
@@ -895,17 +895,17 @@ prtext(unsigned char *p,int leng) {
     printf("\"\n");
 }
 
-prhex(unsigned char *p,int leng) {
+void prhex(unsigned char *p, int leng) {
 
     int n;
     int pos = 25;
 
-    for(n=0; n<leng; n++,p++) {
+    for(n = 0; n < leng; n++, p++) {
         if (fold && pos >= fold) {
             printf ("\\\n\t%02x",*p);
             pos = 14;
         } else {
-            printf(" %02x",*p);
+            printf(" %02x", *p);
             pos += 3;
         }
     }
@@ -915,12 +915,12 @@ prhex(unsigned char *p,int leng) {
 myerror(char *s) {
 
     if (TrksToDo <= 0)
-        fprintf(stderr,"Error: Garbage at end\n",s);
+        fprintf(stderr, "Error: Garbage at end\n", s);
     else
-        fprintf(stderr,"Error: %s\n",s);
+        fprintf(stderr, "Error: %s\n", s);
 }
 
-initfuncs() {
+void initfuncs() {
 
     Mf_error = myerror;
     Mf_header =  myheader;
@@ -946,28 +946,28 @@ initfuncs() {
     Mf_arbitrary =  myarbitrary;
 }
 
-prs_error(char *s) {
+void prs_error(char *s) {
 
     int c;
     int count;
     int ln = (eol_seen? lineno-1 : lineno);
-    fprintf (stderr, "%d: %s\n", ln, s);
+    fprintf(stderr, "%d: %s\n", ln, s);
     if (yyleng > 0 && *yytext != '\n')
-        fprintf (stderr, "*** %*s ***\n", yyleng, yytext);
+        fprintf(stderr, "*** %*s ***\n", yyleng, yytext);
     count = 0;
     while (count < 100 &&
        (c=yylex()) != EOL && c != EOF) count++/* skip rest of line */;
     if (c == EOF) exit(1);
     if (err_cont)
-        longjmp (erjump,1);
+        longjmp(erjump,1);
 }
 
-syntax() {
+void syntax() {
 
     prs_error("Syntax error");
 }
 
-translate() {
+void translate() {
 
     if (yylex() == MTHD) {
         Format = getint("MFile format");

@@ -196,15 +196,17 @@ int (*Mf_keysig)()      = NULLFUNC;
 int (*Mf_sqspecific)()  = NULLFUNC;
 int (*Mf_text)()        = NULLFUNC;
 
-static readtrack();
-static badbyte();
-static metaevent();
-static sysex();
-static chanmessage();
-static msginit();
-static msgleng();
-static msgadd();
-static biggermsg();
+static void badbyte();
+
+static int readtrack();
+static int metaevent();
+static int sysex();
+static int chanmessage();
+static int msgleng();
+
+static void msginit();
+static void msgadd();
+static void biggermsg();
 
 float mf_ticks2sec();
 unsigned long mf_sec2ticks(float,int,unsigned int);
@@ -241,6 +243,26 @@ int filegetc();
 int fileputc();
 void WriteVarLen();
 int eputc(unsigned char);
+
+void translate();
+void initfuncs();
+void mfread();
+void mferror();
+void error();
+
+void mymseq();
+void mymeot();
+void mykeysig();
+void mytempo();
+void mytimesig();
+void mysmpte();
+void myarbitrary();
+void prtime();
+void prtext();
+void prhex();
+void initfuncs();
+void prs_error();
+void syntax();
 
 /***
 * Version: v0.0.5 20101201
