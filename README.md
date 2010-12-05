@@ -15,6 +15,7 @@ any script language, and "recompiled" back into a binary SMF file.
 ### Changes
 
 * v0.0.5 20101205 Set up to compile from Qt Creator
+* v0.0.4 20080115 Unknown changes
 * v0.0.2 20070722 Fixed gcc4+ compiler bug and exit warnings
 * v0.0.1 20031129 Initial release, combined mf2t+t2fm, added getopt args
 

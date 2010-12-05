@@ -1,43 +1,34 @@
-/*
-This program is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free Software
-Foundation; either version 2 of the License, or (at your option) any later
-version. This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-details. You should have received a copy of the GNU General Public License
-along with this program; if not, write to the...
+/***
+# midicomp
 
-Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston,
-MA 02111-1307 USA
-*/
+A MIDI Compiler - convert SMF MIDI files to and from plain text.
+***/
 
 char *usage = "\n\
-midicomp v0.0.4 20080115 markc@renta.net                                    \n\
-                                                                            \n\
-http://midicomp.opensrc.org/                                                \n\
-                                                                            \n\
-Command line argument usage:                                                \n\
-                                                                            \n\
-    -d  --debug     send any debug output to stderr                         \n\
-    -v  --verbose   output in columns with notes on                         \n\
-    -c  --compile   compile ascii input into SMF                            \n\
-    -n  --note      note on/off value as note|octave                        \n\
-    -t  --time      use absolute time instead of ticks                      \n\
-    -fN --fold=N    fold sysex data at N columns                            \n\
-                                                                            \n\
-To translate a SMF file to plain ascii format:                              \n\
-                                                                            \n\
-    midicomp some.mid                   # to view as plain text             \n\
-    midicomp some.mid > some.asc        # to create a text version          \n\
-                                                                            \n\
-To translate a plain ascii formatted file to SMF:                           \n\
-                                                                            \n\
-    midicomp -c some.asc some.mid       # input and output filenames        \n\
-    midicomp -c some.mid < some.asc     # input from stdin with one arg     \n\
-                                                                            \n\
-    midicomp some.mid | somefilter | midicomp -c some2.mid                  \n";
+midicomp v0.0.5 20101205 markc@renta.net                                   \n\
+                                                                           \n\
+http://github.com/markc/midicomp                                           \n\
+                                                                           \n\
+Command line argument usage:                                               \n\
+                                                                           \n\
+    -d  --debug     send any debug output to stderr                        \n\
+    -v  --verbose   output in columns with notes on                        \n\
+    -c  --compile   compile ascii input into SMF                           \n\
+    -n  --note      note on/off value as note|octave                       \n\
+    -t  --time      use absolute time instead of ticks                     \n\
+    -fN --fold=N    fold sysex data at N columns                           \n\
+                                                                           \n\
+To translate a SMF file to plain ascii format:                             \n\
+                                                                           \n\
+    midicomp some.mid                   # to view as plain text            \n\
+    midicomp some.mid > some.asc        # to create a text version         \n\
+                                                                           \n\
+To translate a plain ascii formatted file to SMF:                          \n\
+                                                                           \n\
+    midicomp -c some.asc some.mid       # input and output filenames       \n\
+    midicomp -c some.mid < some.asc     # input from stdin with one arg    \n\
+                                                                           \n\
+    midicomp some.mid | somefilter | midicomp -c some2.mid                 \n";
 
 #include <malloc.h>
 #include <setjmp.h>
@@ -49,7 +40,7 @@ To translate a plain ascii formatted file to SMF:                           \n\
 #include <string.h>
 #include "midicomp.h"
 
-int main(int argc,char **argv) {
+int main(int argc, char **argv) {
 
     FILE *efopen();
     Mf_nomerge = 1;
@@ -1348,3 +1339,9 @@ int filegetc() {
 
     return(getc(F));
 }
+
+/***
+* Version: v0.0.5 20101201
+* License: AGPLv3 - http://www.gnu.org/licenses/agpl.html
+* Copyright: 2003-2010 Mark Constable (markc@renta.net)
+***/
