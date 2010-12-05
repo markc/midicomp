@@ -14,9 +14,9 @@ any script language, and "recompiled" back into a binary SMF file.
 
 ### Changes
 
-v0.0.5 20101205 Set up to compile from Qt Creator
-v0.0.2 20070722 Fixed gcc4+ compiler bug and exit warnings
-v0.0.1 20031129 Initial release, combined mf2t+t2fm, added getopt args
+* v0.0.5 20101205 Set up to compile from Qt Creator
+* v0.0.2 20070722 Fixed gcc4+ compiler bug and exit warnings
+* v0.0.1 20031129 Initial release, combined mf2t+t2fm, added getopt args
 
 Command line argument usage:
 
@@ -142,6 +142,8 @@ note numbers by /n=/ or /note=/, program numbers by /p=/ or /prog=/.
 Meta events by /^Meta/ or /^SeqSpec/.
 Text events by /"/, continued lines by /\\$/, continuation lines by /$\t/
 (that was a TAB character).
+
+## Examples
 
 In awk each parameter is a field, in perl you can use split to get the
 parameters (except for strings).
