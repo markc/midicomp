@@ -6,8 +6,8 @@ TEMPLATE = app
 TARGET = 
 DEPENDPATH += .
 INCLUDEPATH += .
+QT -= core gui
 
-# Input
 HEADERS += midicomp.h midifile.h t2mf.h
 SOURCES += midicomp.c t2mflex.c yyread.c
 
