@@ -267,5 +267,5 @@ void syntax();
 /***
 * Version: v0.0.5 20101201
 * License: AGPLv3 - http://www.gnu.org/licenses/agpl.html
-* Copyright: 2003-2010 Mark Constable (markc@renta.net)
+* Copyright: 2003-2011 Mark Constable (markc@renta.net)
 ***/
