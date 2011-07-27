@@ -1,4 +1,4 @@
-# CMakeLists.txt v0.0.1 20110727 (C) markc@renta.net (AGPLv3)
+# CMakeLists.txt v0.0.6 20110727 (C) markc@renta.net (AGPLv3)
 
 project(midicomp)
 cmake_minimum_required(VERSION 2.6)

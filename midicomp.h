@@ -265,7 +265,7 @@ void prs_error();
 void syntax();
 
 /***
-* Version: v0.0.5 20101201
+* Version: v0.0.6 20110727
 * License: AGPLv3 - http://www.gnu.org/licenses/agpl.html
 * Copyright: 2003-2011 Mark Constable (markc@renta.net)
 ***/

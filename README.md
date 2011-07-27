@@ -1,6 +1,6 @@
 # midicomp
 
-### v0.0.5 20101205 markc@renta.net
+### v0.0.6 20110727 markc@renta.net (AGPLv3)
 
 A program to manipulate SMF (Standard MIDI File) files. `midicomp` will
 both read and write SMF files in 0 or format 1 and also read and write
@@ -8,18 +8,28 @@ it's own plain text format. This means a SMF file can be turned into
 easily parseble text, edited with any text editor or filtered through
 any script language, and "recompiled" back into a binary SMF file.
 
-* Copyright 2003-2010 Mark Constable (markc@renta.net)
+* Copyright 2003-2011 Mark Constable (markc@renta.net)
 * License AGPLv3 - http://www.gnu.org/licenses/agpl.html
 * Originally based on mf2t/t2fm by Piet van Oostrum
 
 ### Changes
 
+* v0.0.6 20110727 Compile as a CMake project, remove QMake pro files
 * v0.0.5 20101205 Set up to compile from Qt Creator
 * v0.0.4 20080115 Unknown changes
 * v0.0.2 20070722 Fixed gcc4+ compiler bug and exit warnings
 * v0.0.1 20031129 Initial release, combined mf2t+t2fm, added getopt args
 
-Command line argument usage
+### To Build from Source
+
+* git clone https://github.com/markc/midicomp
+* mkdir midicomp/build
+* cd midicomp/build
+* cmake ..
+* make
+* sudo make install #(optional)
+
+## Usage
 
     -d  --debug     send any debug output to stderr
     -v  --verbose   output in columns with notes on

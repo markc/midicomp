@@ -5,7 +5,7 @@ A MIDI Compiler - convert SMF MIDI files to and from plain text.
 ***/
 
 char *usage = "\
-midicomp v0.0.5 20101205 markc@renta.net (AGPLv3) \n\
+midicomp v0.0.6 20110727 markc@renta.net (AGPLv3) \n\
 \n\
 http://github.com/markc/midicomp \n\
 \n\
@@ -1352,7 +1352,7 @@ int filegetc() {
 }
 
 /***
-* Version: v0.0.5 20101201
+* Version: v0.0.6 20110727
 * License: AGPLv3 - http://www.gnu.org/licenses/agpl.html
-* Copyright: 2003-2010 Mark Constable (markc@renta.net)
+* Copyright: 2003-2011 Mark Constable (markc@renta.net)
 ***/
