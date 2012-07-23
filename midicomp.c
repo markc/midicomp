@@ -16,6 +16,7 @@ Command line argument usage: \n\
   -c  --compile   compile ascii input into SMF \n\
   -n  --note      note on/off value as note|octave \n\
   -t  --time      use absolute time instead of ticks \n\
+  -i  --inc       write/read incremental time or tick values to/from ascii file \n\
   -fN --fold=N    fold sysex data at N columns \n\
 \n\
 To translate a SMF file to plain ascii format: \n\
@@ -54,12 +55,13 @@ int main(int argc, char **argv) {
     {"compile", no_argument,     0, 'c'},
     {"note",  no_argument,     0, 'n'},
     {"time",  no_argument,     0, 't'},
+    {"inc",     no_argument,       0, 'i'},
     {"fold",  required_argument, 0, 'f'},
     {0, 0, 0, 0}
   };
   int option_index = 0;
 
-  while ((c = getopt_long(argc, argv, "dvcntf:", long_options, &option_index)) != -1) {
+  while ((c = getopt_long(argc, argv, "dvcntif:", long_options, &option_index)) != -1) {
     switch (c) {
     case 0:
       if (long_options[option_index].flag != 0)
@@ -79,6 +81,9 @@ int main(int argc, char **argv) {
       break;
     case 't':
       times++;
+      break;
+    case 'i':
+      incs++;
       break;
      case 'c':
       compile++;
@@ -222,9 +227,11 @@ static int readtrack() {
   if (readmt("MTrk") == EOF) return(0);
   Mf_toberead = read32bit();
   Mf_currtime = 0;
+  old_Mf_currtime = 0;
   if (Mf_starttrack) (*Mf_starttrack)();
 
   while (Mf_toberead > 0) {
+    old_Mf_currtime=Mf_currtime;
     Mf_currtime += readvarinum();
     c = egetc();
     if (sysexcontinue && c != 0xf7)
@@ -842,21 +849,46 @@ void myarbitrary(int leng, char *mess) {
 }
 
 void prtime() {
-
-  if (times) {
-    long m = (Mf_currtime-T0)/Beat;
-    if (verbose)
-      printf("%03ld:%02ld:%03ld ",
-        m/Measure+M0, m%Measure, (Mf_currtime-T0)%Beat);
-    else
-      printf("%ld:%ld:%ld ",
-        m/Measure+M0, m%Measure, (Mf_currtime-T0)%Beat);
-  } else {
-    if (verbose)
-      printf("%-10ld ", Mf_currtime);
-    else
-      printf("%ld ", Mf_currtime);
-  }
+    if (times) 
+      {
+	if (incs)
+	  {
+	    long m = (Mf_currtime-old_Mf_currtime)/Beat;
+	    if (verbose)
+	      printf("%03ld:%02ld:%03ld ",
+		     m/Measure+M0,m%Measure,(Mf_currtime-old_Mf_currtime)%Beat);
+	    else
+	      printf("%ld:%ld:%ld ",
+		     m/Measure+M0,m%Measure,(Mf_currtime-old_Mf_currtime)%Beat);
+	  }
+	else
+	  {
+	    long m = (Mf_currtime-T0)/Beat;
+	    if (verbose)
+	      printf("%03ld:%02ld:%03ld ",
+		     m/Measure+M0,m%Measure,(Mf_currtime-T0)%Beat);
+	    else
+	      printf("%ld:%ld:%ld ",
+		     m/Measure+M0,m%Measure,(Mf_currtime-T0)%Beat);
+	  }
+      } 
+    else 
+      {
+	if (incs)
+	  {
+	    if (verbose)
+	      printf("%-10ld ", Mf_currtime - old_Mf_currtime);
+	    else
+	      printf("%ld ", Mf_currtime - old_Mf_currtime);
+	  }
+	else
+	  {
+	    if (verbose)
+	      printf("%-10ld ", Mf_currtime);
+	    else
+	      printf("%ld ", Mf_currtime);
+	  }
+      }
 }
 
 void prtext(unsigned char *p, int leng) {
@@ -1027,7 +1059,11 @@ static int mywritetrack() {
         newtime = T0 + newtime * Beat + yyval;
         opcode = yylex();
       }
-      delta = newtime - currtime;
+      if (incs)
+	delta = newtime;
+      else
+	delta = newtime - currtime;
+      if (delta < 0) prs_error("Illegal time value, did you forget -i option ?");
       switch(opcode) {
        case ON:
        case OFF:
