@@ -3,6 +3,7 @@
 
 #include <memory.h>
 #include <string.h>
+#include <unistd.h>
 
 /*
  * read, ignoring CR's
