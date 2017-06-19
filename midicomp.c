@@ -113,16 +113,20 @@ int main(int argc, char **argv) {
     char *outfile;
 
     if (optind < argc) {
-      yyin = efopen (argv[optind], "r");
-      infile = argv[optind];
+      if (optind+1 < argc) {
+        yyin = efopen(argv[optind], "r");
+        infile = argv[optind];
+        F = efopen(argv[optind+1], "wb");
+        outfile = argv[optind+1];
+      } else {
+        yyin = stdin;
+        infile = "stdin";
+        F = efopen(argv[optind], "wb");
+        outfile = argv[optind];
+      }
     } else {
       yyin = stdin;
       infile = "stdin";
-    }
-    if (optind+1 < argc ) {
-      F = efopen(argv[optind+1], "wb");
-      outfile = argv[optind+1];
-    } else {
 #ifdef SETMODE
       setmode (fileno(stdout), O_BINARY);
       F = stdout;
