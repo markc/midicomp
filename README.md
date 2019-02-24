@@ -158,6 +158,12 @@ Text events by `/"/`, continued lines by `/\\$/`, continuation lines by `/$\t/`
 
 ## Examples
 
+To convert a huge number of MID files try some variation of this command...
+
+    find /path/to/MIDIs -type f -name '*.mid' | while read i; do midicomp $i > ${i}_output.txt; done
+
+---
+
 In awk each parameter is a field, in perl you can use split to get the
 parameters (except for strings).
 
