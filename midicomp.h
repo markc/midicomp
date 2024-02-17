@@ -250,7 +250,6 @@ void translate();
 void initfuncs();
 void mfread();
 void mferror();
-void error();
 
 void mymseq();
 void mymeot();

@@ -161,7 +161,7 @@ if (dbg) fprintf(stderr, "Compiling %s to %s\n", infile, outfile);
     initfuncs();
     Mf_getc = filegetc;
     mfread();
-    if (ferror(F)) error ("Output file error");
+    if (ferror(F)) prs_error ("Output file error");
     fclose(F);
   }
 }
@@ -1048,7 +1048,7 @@ static int mywritetrack() {
       prs_error("Unexpected MTrk");
      case EOF:
       err_cont = 0;
-      error("Unexpected EOF");
+      prs_error("Unexpected EOF");
       return -1;
      case TRKEND:
       err_cont = 0;
@@ -1116,7 +1116,7 @@ static int mywritetrack() {
           cc = getbyte("clocks per click");
           bb = getbyte("32nd notes per 24 clocks");
           for(i = 0, k = 1 ; k < denom; i++, k <<= 1);
-          if (k != denom) error("Illegal TimeSig");
+          if (k != denom) prs_error("Illegal TimeSig");
           data[0] = nn;
           data[1] = i;
           data[2] = cc;
@@ -1135,7 +1135,7 @@ static int mywritetrack() {
        case KEYSIG:
         data[0] = i = getint("Keysig");
         if (i < -7 || i > 7)
-          error("Key Sig must be between -7 and 7");
+          prs_error("Key Sig must be between -7 and 7");
         if ((c=yylex()) != MINOR && c != MAJOR)
           syntax();
         data[1] = (c == MINOR);
@@ -1192,7 +1192,7 @@ getbyte(char *mess) {
   getint(mess);
   if (yyval < 0 || yyval > 127) {
     sprintf(ermesg, "Wrong value (%ld) for %s", yyval, mess);
-    error(ermesg);
+    prs_error(ermesg);
     yyval = 0;
   }
   return yyval;
@@ -1203,7 +1203,7 @@ getint(char *mess) {
   char ermesg[100];
   if (yylex() != INT) {
     sprintf(ermesg, "Integer expected for %s", mess);
-    error(ermesg);
+    prs_error(ermesg);
     yyval = 0;
   }
   return yyval;
@@ -1212,7 +1212,7 @@ getint(char *mess) {
 static void checkchan() {
 
   if (yylex() != CH || yylex() != INT) syntax();
-  if (yyval < 1 || yyval > 16) error("Chan must be between 1 and 16");
+  if (yyval < 1 || yyval > 16) prs_error("Chan must be between 1 and 16");
   chan = yyval-1;
 }
 
@@ -1238,7 +1238,7 @@ static void checknote() {
      yyval += 12 * atoi(p);
   }
   if (yyval < 0 || yyval > 127)
-    error("Note must be between 0 and 127");
+    prs_error("Note must be between 0 and 127");
   data[0] = yyval;
 }
 
@@ -1246,7 +1246,7 @@ static void checkval() {
 
   if (yylex() != VAL || yylex() != INT) syntax();
   if (yyval < 0 || yyval > 127)
-    error("Value must be between 0 and 127");
+    prs_error("Value must be between 0 and 127");
   data[1] = yyval;
 }
 
@@ -1254,7 +1254,7 @@ static void splitval() {
 
   if (yylex() != VAL || yylex() != INT) syntax();
   if (yyval < 0 || yyval > 16383)
-     error("Value must be between 0 and 16383");
+     prs_error("Value must be between 0 and 16383");
   data[0] = yyval % 128;
   data[1] = yyval / 128;
 }
@@ -1263,7 +1263,7 @@ static void get16val() {
 
   if (yylex() != VAL || yylex() != INT) syntax();
   if (yyval < 0 || yyval > 65535)
-    error("Value must be between 0 and 65535");
+    prs_error("Value must be between 0 and 65535");
   data[0] = (yyval >> 8) & 0xff;
   data[1] = yyval & 0xff;
 }
@@ -1273,7 +1273,7 @@ static void checkcon() {
   if (yylex() != CON || yylex() != INT)
   syntax();
   if (yyval < 0 || yyval > 127)
-    error("Controller must be between 0 and 127");
+    prs_error("Controller must be between 0 and 127");
   data[0] = yyval;
 }
 
@@ -1281,7 +1281,7 @@ static void checkprog() {
 
   if (yylex() != PROG || yylex() != INT) syntax();
   if (yyval < 0 || yyval > 127)
-    error("Program number must be between 0 and 127");
+    prs_error("Program number must be between 0 and 127");
   data[0] = yyval;
 }
 
@@ -1309,7 +1309,7 @@ static void gethex() {
         buffer = realloc(buffer, bufsiz);
       else
         buffer = malloc (bufsiz);
-      if (! buffer) error("Out of memory");
+      if (! buffer) prs_error("Out of memory");
     }
     while(i < yyleng - 1) {
       c = yytext[i++];
@@ -1341,7 +1341,7 @@ rescan:
           buffer = realloc(buffer, bufsiz);
         else
            buffer = malloc(bufsiz);
-        if (! buffer) error ("Out of memory");
+        if (! buffer) prs_error ("Out of memory");
       }
       buffer[buflen++] = yyval;
       c = yylex();
