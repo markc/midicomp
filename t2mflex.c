@@ -823,13 +823,13 @@ yymore();
 	YY_BREAK
 case 46:
 # line 83 "t2mf.fl"
-{ error ("unterminated string");
+{ prs_error ("unterminated string");
 			  lineno++; eol_seen++; BEGIN(0); return EOL;
 			}
 	YY_BREAK
 case YY_STATE_EOF(QUOTE):
 # line 86 "t2mf.fl"
-error ("EOF in string"); return EOF;
+prs_error ("EOF in string"); return EOF;
 	YY_BREAK
 case 48:
 # line 88 "t2mf.fl"
