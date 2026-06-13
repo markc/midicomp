@@ -223,3 +223,89 @@ and this is the corresponding awk script.
     /ch=1 / { if (trknr > 2) { $3 = "ch=2" } else { $3 = "ch=3" } }
     { print }
     ------------------------------------------------------------------------
+
+## Building for Other Platforms
+
+The published binary is Linux x86-64. Because `midicomp` is plain portable C
+with a CMake build, other targets are straightforward — the catch is that you
+need to build *on* (or *for*) each target OS. Below are recipes for anyone
+adventurous enough to want macOS or Windows builds.
+
+### macOS (Apple Silicon / arm64) via GitHub Actions
+
+You can't cross-compile a macOS binary from Linux without an Apple SDK, but
+GitHub's `macos-14` runners are real Apple Silicon machines, so CI can build
+and test natively and attach the result to a release. Drop this in
+`.github/workflows/release-macos.yml`:
+
+```yaml
+name: release-macos-arm64
+on:
+  release:
+    types: [published]
+  workflow_dispatch:        # also runnable by hand from the Actions tab
+
+permissions:
+  contents: write           # needed to upload release assets
+
+jobs:
+  build:
+    runs-on: macos-14       # Apple Silicon (arm64)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure & build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Package
+        run: |
+          strip build/midicomp
+          mv build/midicomp midicomp-macos-arm64
+          shasum -a 256 midicomp-macos-arm64 > midicomp-macos-arm64.sha256
+      - name: Upload to the release
+        if: github.event_name == 'release'
+        run: gh release upload "${{ github.event.release.tag_name }}" \
+               midicomp-macos-arm64 midicomp-macos-arm64.sha256
+        env:
+          GH_TOKEN: ${{ github.token }}
+```
+
+Publish a release (or trigger the workflow manually) and the arm64 binary shows
+up as an asset. Note it is **unsigned / un-notarized** — on first run macOS
+Gatekeeper will block it; clear the quarantine flag with
+`xattr -d com.apple.quarantine ./midicomp-macos-arm64`. For an `x86_64` build
+swap the runner to `macos-13`, or build a universal binary on `macos-14` with
+`-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"`.
+
+### Windows 10/11
+
+The cleanest native `.exe` comes from **MSYS2 + MinGW-w64** (UCRT), which gives a
+standalone binary with no runtime DLL dependency beyond the OS. From an MSYS2
+"UCRT64" shell:
+
+```sh
+pacman -S --needed mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake
+cmake -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_EXE_LINKER_FLAGS="-static"
+cmake --build build      # produces build/midicomp.exe
+```
+
+Two portability notes for the MinGW build:
+
+- `yyread.c` uses the legacy BSD `bcopy()`, which MinGW does not provide. Swap it
+  for the standard `memmove()` (same arguments, source and dest reversed:
+  `memmove(dest, src, n)`), which is the modern equivalent.
+- `getopt_long()` is a GNU extension; MinGW-w64 ships it, so the option parsing
+  works as-is. **MSVC (cl.exe) does not** provide `getopt_long`, `unistd.h`, or
+  POSIX `read()`, so a native MSVC build would need those shimmed — MinGW is much
+  less work.
+
+This can also be automated on a `windows-latest` GitHub Actions runner using the
+[`msys2/setup-msys2`](https://github.com/msys2/setup-msys2) action with the same
+`pacman` + `cmake` steps, uploading `midicomp.exe` the same way as the macOS job
+above.
+
+Alternatively, **WSL** (Windows Subsystem for Linux) runs the Linux binary
+unmodified — easiest of all if a true native `.exe` isn't required.

@@ -1,0 +1,31 @@
+name: release-macos-arm64
+on:
+  release:
+    types: [published]
+  workflow_dispatch:        # also runnable by hand from the Actions tab
+
+permissions:
+  contents: write           # needed to upload release assets
+
+jobs:
+  build:
+    runs-on: macos-14       # Apple Silicon (arm64)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure & build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Package
+        run: |
+          strip build/midicomp
+          mv build/midicomp midicomp-macos-arm64
+          shasum -a 256 midicomp-macos-arm64 > midicomp-macos-arm64.sha256
+      - name: Upload to the release
+        if: github.event_name == 'release'
+        run: gh release upload "${{ github.event.release.tag_name }}" \
+               midicomp-macos-arm64 midicomp-macos-arm64.sha256
+        env:
+          GH_TOKEN: ${{ github.token }}
