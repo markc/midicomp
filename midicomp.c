@@ -31,7 +31,6 @@ To translate a plain ascii formatted file to SMF: \n\
 \n\
   midicomp some.mid | somefilter | midicomp -c some2.mid \n";
 
-#include <malloc.h>
 #include <setjmp.h>
 #include <errno.h>
 #include <unistd.h>
