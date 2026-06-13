@@ -1,6 +1,6 @@
 # midicomp
 
-##### v0.0.8 20170315 markc@renta.net (AGPL-3.0)
+##### v0.0.8 20170315 markc@renta.net (MIT)
 
 A program to manipulate SMF (Standard MIDI File) files. `midicomp` will
 both read and write SMF files in 0 or format 1 and also read and write
@@ -8,8 +8,9 @@ its own plain text format. This means a SMF file can be turned into
 easily parseable text, edited with any text editor or filtered through
 any script language, and "recompiled" back into a binary SMF file.
 
-* Copyright (C) 2003-2017 Mark Constable <markc@renta.net> 
-* License: AGPL-3.0 - http://www.gnu.org/licenses/agpl.html
+* Copyright (C) 2003-2026 Mark Constable <markc@renta.net>
+* License: MIT - see [LICENSE](LICENSE)
+* Co-authored-by: Claude Code, Codex
 * Originally based on mf2t/t2fm by Piet van Oostrum
 
 ### To Build from Source
@@ -21,8 +22,20 @@ cmake ..
 make
 sudo make install #(optional)
 ```
+This is pre-ANSI K&R C, so the build pins the gnu89 standard; a modern
+compiler's default would reject it. CMake 3.10+ is required.
+
+### Running the Tests
+A CTest suite round-trips the bundled `ex1.mid` sample through the decoder
+and compiler:
+```
+cd build
+ctest --output-on-failure
+```
+
 ### Changes
 
+* v0.0.9 20260613 Relicensed to MIT, fixed CMake 3.10+ build, added CTest suite
 * v0.0.8 20170315 Added unistd.h include to yyread.c
 * v0.0.7 20120724 Added incremental option for time tags [Alexandre Oberlin]
 * v0.0.6 20110727 Compile as a CMake project, remove QMake pro files
