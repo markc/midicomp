@@ -3,6 +3,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:        # also runnable by hand from the Actions tab
+    inputs:
+      tag:
+        description: "Existing release tag to attach the macOS binary to (e.g. v0.2.0)"
+        required: true
+        default: ""
 
 permissions:
   contents: write           # needed to upload release assets
@@ -12,6 +17,9 @@ jobs:
     runs-on: macos-14       # Apple Silicon (arm64)
     steps:
       - uses: actions/checkout@v4
+        with:
+          # for a manual dispatch, build the source of the tag we're attaching to
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
       - name: Configure & build
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release
@@ -24,8 +32,9 @@ jobs:
           mv build/midicomp midicomp-macos-arm64
           shasum -a 256 midicomp-macos-arm64 > midicomp-macos-arm64.sha256
       - name: Upload to the release
-        if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" \
-               midicomp-macos-arm64 midicomp-macos-arm64.sha256
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          gh release upload "$TAG" \
+            midicomp-macos-arm64 midicomp-macos-arm64.sha256 --clobber
         env:
           GH_TOKEN: ${{ github.token }}
