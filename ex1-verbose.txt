@@ -3,7 +3,7 @@ MTrk
 000:00:000 Meta SeqName "Track 1"
 000:00:000 On      ch=1   note=c4   vol=70 
 000:00:000 Tempo 500000
-000:00:000 TimeSig 4/4 32 99
+000:00:000 TimeSig 4/4 0 0
 000:00:096 On      ch=1   note=c4   vol=0  
 000:00:096 On      ch=1   note=d4   vol=70 
 000:00:192 On      ch=1   note=d4   vol=0  

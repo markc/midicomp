@@ -1,0 +1,4 @@
+MFile 1 1 1
+MTrk
+0 TimeSig 4/0 24 8
+TrkEnd

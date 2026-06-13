@@ -61,6 +61,42 @@ elseif(MODE STREQUAL "canonical")
   run(ARGS -c "${WORKDIR}/c2.mid" IN "${WORKDIR}/c2.txt")
   must_match("${WORKDIR}/c1.mid" "${WORKDIR}/c2.mid" "canonical SMF stability")
 
+elseif(MODE STREQUAL "smpte")
+  # SMPTE-division headers (MFile ... -fps ticks) must compile and round-trip.
+  # Regression guard: a too-strict division bound once rejected valid SMPTE.
+  run(ARGS -c "${WORKDIR}/smpte1.mid" IN "${SRCDIR}/tests/fixtures/smpte.txt")
+  run(ARGS "${WORKDIR}/smpte1.mid" OUT "${WORKDIR}/smpte1.txt")
+  must_match("${SRCDIR}/tests/fixtures/smpte.txt" "${WORKDIR}/smpte1.txt" "SMPTE round-trip")
+
+elseif(MODE STREQUAL "security")
+  # Adversarial inputs that previously crashed (NULL deref, OOB read, SIGFPE)
+  # or triggered UB. Assert midicomp handles each WITHOUT crashing: a clean
+  # exit is 0 (handled) or 1 (reported error); a signal (SIGSEGV/SIGFPE) shows
+  # up as a non-numeric RESULT_VARIABLE or a code >= 128.
+  function(no_crash what)
+    # remaining args after `what` are the midicomp argv
+    execute_process(
+      COMMAND "${BIN}" ${ARGN}
+      OUTPUT_QUIET ERROR_QUIET RESULT_VARIABLE rc)
+    if(NOT rc MATCHES "^[01]$")
+      message(FATAL_ERROR "CRASH/abnormal exit on ${what}: midicomp ${ARGN} -> '${rc}'")
+    endif()
+    message(STATUS "  no-crash: ${what} (exit ${rc})")
+  endfunction()
+
+  set(fx "${SRCDIR}/tests/fixtures")
+  # decode path (also under -t which exercises the prtime division guards)
+  foreach(f meta-tempo-len0 meta-smpte-len0 meta-keysig-len0 header-division0 huge-varlen)
+    no_crash("decode ${f}" "${fx}/${f}.mid")
+    no_crash("decode -t ${f}" -t "${fx}/${f}.mid")
+  endforeach()
+  # compile path with out-of-range / malformed values.
+  # NB: two-arg compile is `-c <input text> <output midi>`, so the fixture
+  # (input) MUST come first, the output path second.
+  foreach(f compile-value-oob compile-timesig-denom0 compile-hex-oob)
+    no_crash("compile ${f}" -c "${fx}/${f}.txt" "${WORKDIR}/${f}.out.mid")
+  endforeach()
+
 else()
   message(FATAL_ERROR "unknown MODE '${MODE}'")
 endif()

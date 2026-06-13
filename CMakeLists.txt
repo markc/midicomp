@@ -1,7 +1,7 @@
-# CMakeLists.txt v0.1.0 20260613 (C) markc@renta.net (MIT)
+# CMakeLists.txt v0.2.0 20260613 (C) markc@renta.net (MIT)
 
 cmake_minimum_required(VERSION 3.10)
-project(midicomp VERSION 0.1.0 LANGUAGES C)
+project(midicomp VERSION 0.2.0 LANGUAGES C)
 
 # This is pre-ANSI K&R C; build it as gnu89 so modern compilers accept the
 # empty-parens prototypes and implicit declarations.
@@ -36,7 +36,7 @@ install(TARGETS midicomp DESTINATION bin)
 enable_testing()
 
 set(_midicomp_test_driver "${CMAKE_SOURCE_DIR}/tests/run_test.cmake")
-foreach(mode plain verbose roundtrip canonical)
+foreach(mode plain verbose roundtrip canonical smpte security)
   add_test(
     NAME ${mode}
     COMMAND ${CMAKE_COMMAND}

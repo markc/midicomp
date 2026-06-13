@@ -3,7 +3,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void error();
+/* The lexer calls error() on lexical errors (e.g. unterminated string) from
+   inside yylex(). Route these to the fatal() handler (not the recoverable
+   mc_error(), which itself calls yylex() to resync — a reentrant scanner call
+   that would corrupt flex's static state). Lexical errors are unrecoverable. */
+void fatal(char *);
+#define error fatal
 
 #define MTHD	256
 #define MTRK	257

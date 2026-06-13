@@ -1,6 +1,6 @@
 # midicomp
 
-##### v0.1.0 20260613 markc@renta.net (MIT)
+##### v0.2.0 20260613 markc@renta.net (MIT)
 
 A program to manipulate SMF (Standard MIDI File) files. `midicomp` will
 both read and write SMF files in 0 or format 1 and also read and write
@@ -17,8 +17,8 @@ any script language, and "recompiled" back into a binary SMF file.
 
 A prebuilt Linux x86-64 binary is attached to the latest release:
 
-* [midicomp-0.1.0-linux-x86_64](https://github.com/markc/midicomp/releases/download/v0.1.0/midicomp-0.1.0-linux-x86_64)
-  ([sha256](https://github.com/markc/midicomp/releases/download/v0.1.0/midicomp-0.1.0-linux-x86_64.sha256))
+* [midicomp-0.2.0-linux-x86_64](https://github.com/markc/midicomp/releases/download/v0.2.0/midicomp-0.2.0-linux-x86_64)
+  ([sha256](https://github.com/markc/midicomp/releases/download/v0.2.0/midicomp-0.2.0-linux-x86_64.sha256))
 
 See all releases at https://github.com/markc/midicomp/releases. For other
 platforms, build from source below.
@@ -37,14 +37,40 @@ compiler's default would reject it. CMake 3.10+ is required.
 
 ### Running the Tests
 A CTest suite round-trips the bundled `ex1.mid` sample through the decoder
-and compiler:
+and compiler, exercises SMPTE-division headers, and replays a set of
+adversarial fixtures (see `tests/fixtures/`) that previously crashed the
+decoder:
 ```
 cd build
 ctest --output-on-failure
 ```
 
+### Security
+
+v0.2.0 was hardened against malicious input following a comprehensive audit.
+`midicomp` parses untrusted files two ways — a binary SMF (`midicomp evil.mid`)
+and a text file (`midicomp -c evil.txt out.mid`) — and an attacker fully
+controls those bytes. The audit found and fixed memory-safety and robustness
+bugs reachable from such input, including:
+
+* a NULL-pointer dereference / out-of-bounds heap read decoding short or
+  zero-length fixed meta events (tempo, SMPTE, time/key signature, sequence
+  number) — these are now bounds-checked and zero-padded;
+* multiple divide-by-zero crashes (SIGFPE) from a zero MThd division or a
+  crafted time signature, in both the decode and compile paths;
+* undefined behaviour where the never-defined `error()` collided with glibc's
+  `error(3)`, so validation checks failed to abort and out-of-range bytes were
+  written — `error()` is now a real recoverable handler;
+* signed-overflow / undefined behaviour in variable-length-quantity decoding,
+  text integer parsing, time arithmetic, and bank-number notation.
+
+The `tests/fixtures/` corpus pins these cases; the suite is run clean under
+AddressSanitizer + UndefinedBehaviorSanitizer. See `_journal/` for the full
+audit write-up.
+
 ### Changes
 
+* v0.2.0 20260613 Security hardening of both parse paths (audit + sanitizer-clean), SMPTE/adversarial tests, regenerated lexer
 * v0.1.0 20260613 Relicensed to MIT, fixed CMake 3.10+ build, added CTest suite, warning-clean -Wall build
 * v0.0.8 20170315 Added unistd.h include to yyread.c
 * v0.0.7 20120724 Added incremental option for time tags [Alexandre Oberlin]

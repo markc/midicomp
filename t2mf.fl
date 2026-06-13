@@ -17,6 +17,8 @@ long bankno();
 
 %}
 
+%option noyywrap
+
 Hex	[0-9a-f]
 
 %x	QUOTE
@@ -69,10 +71,10 @@ v([oa]l)?=	return VAL;
 c(on)?=		return CON;
 p(rog)?=	return PROG;
 
-[-+]?[0-9]+		sscanf (yytext, "%ld", &yyval); return INT;
-0x{Hex}+		sscanf (yytext+2, "%lx", &yyval); return INT;
+[-+]?[0-9]+		yyval = strtol (yytext, (char **)0, 10); return INT;
+0x{Hex}+		yyval = (long) strtoul (yytext+2, (char **)0, 16); return INT;
 \$[A-H1-8]+		yyval = bankno (yytext+1, yyleng-1); return INT;
-<HEX>{Hex}{Hex}?	sscanf (yytext, "%lx", &yyval); return INT;
+<HEX>{Hex}{Hex}?	yyval = (long) strtoul (yytext, (char **)0, 16); return INT;
 
 [a-g][#b+-]?[0-9]+	return NOTEVAL;
 

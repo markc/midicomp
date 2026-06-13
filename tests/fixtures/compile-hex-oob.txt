@@ -1,0 +1,4 @@
+MFile 1 1 96
+MTrk
+0 Arb 0x1234
+TrkEnd

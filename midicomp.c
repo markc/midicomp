@@ -5,7 +5,7 @@ A MIDI Compiler - convert SMF MIDI files to and from plain text.
 ***/
 
 char *usage = "\
-midicomp v0.1.0 20260613 markc@renta.net (MIT) \n\
+midicomp v0.2.0 20260613 markc@renta.net (MIT) \n\
 \n\
 http://github.com/markc/midicomp \n\
 \n\
@@ -40,6 +40,7 @@ To translate a plain ascii formatted file to SMF: \n\
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 #include "midicomp.h"
 
 int main(int argc, char **argv) {
@@ -70,10 +71,19 @@ int main(int argc, char **argv) {
     case 'd':
       dbg++;
       break;
-    case 'f':
-      fold = atoi(optarg);
-      fprintf(stderr, "fold=%d\n", fold);
+    case 'f': {
+      char *endp;
+      long v;
+      errno = 0;
+      v = strtol(optarg, &endp, 10);
+      if (*optarg == '\0' || *endp != '\0' || v < 0 || v > INT_MAX
+          || errno == ERANGE) {
+        fprintf(stderr, "fold must be a non-negative integer\n");
+        return 1;
+      }
+      fold = (int)v;
       break;
+    }
     case 'm':
       Mf_nomerge = 0;
       break;
@@ -115,15 +125,21 @@ int main(int argc, char **argv) {
 
     if (optind < argc) {
       if (optind+1 < argc) {
-        yyin = efopen(argv[optind], "r");
         infile = argv[optind];
-        F = efopen(argv[optind+1], "wb");
+        if (strcmp(infile, "-") == 0) { yyin = stdin; infile = "stdin"; }
+        else yyin = efopen(infile, "r");
         outfile = argv[optind+1];
+        /* "-" means stdout. Output is seek-based (track lengths are patched
+           in place), so this works to a regular file or redirect but errors
+           cleanly on a pipe via the fseek check in mf_w_track_chunk. */
+        if (strcmp(outfile, "-") == 0) { F = fdopen(fileno(stdout), "wb"); outfile = "stdout"; }
+        else F = efopen(outfile, "wb");
       } else {
         yyin = stdin;
         infile = "stdin";
-        F = efopen(argv[optind], "wb");
         outfile = argv[optind];
+        if (strcmp(outfile, "-") == 0) { F = fdopen(fileno(stdout), "wb"); outfile = "stdout"; }
+        else F = efopen(outfile, "wb");
       }
     } else {
       yyin = stdin;
@@ -154,7 +170,7 @@ if (dbg) fprintf(stderr, "Compiling %s to %s\n", infile, outfile);
       PrChmsg = "ProgCh  ch=%-2d  prog=%-3d\n";
       ChPrmsg = "ChanPr  ch=%-2d  val=%-3d\n";
     }
-    if (optind < argc)
+    if (optind < argc && strcmp(argv[optind], "-") != 0)
       F = efopen(argv[optind], "rb");
     else
       F = fdopen(fileno(stdin), "rb");
@@ -162,7 +178,7 @@ if (dbg) fprintf(stderr, "Compiling %s to %s\n", infile, outfile);
     initfuncs();
     Mf_getc = filegetc;
     mfread();
-    if (ferror(F)) error ("Output file error");
+    if (ferror(F)) { fprintf(stderr, "Input file error\n"); exit(1); }
     fclose(F);
   }
   return 0;
@@ -219,7 +235,7 @@ static void readheader() {
 
 static int readtrack() {
 
-  long lookfor;
+  long length;
   int c, c1, type;
   int sysexcontinue = 0;
   int running = 0;
@@ -261,25 +277,30 @@ static int readtrack() {
     switch(c) {
      case 0xff:
       type = egetc();
-      lookfor = Mf_toberead - readvarinum();
+      length = readvarinum();
+      if (length > Mf_toberead) length = Mf_toberead;
       msginit();
-      while(Mf_toberead >= lookfor) msgadd(egetc());
+      while (length-- > 0) msgadd(egetc());
       metaevent(type);
       break;
      case 0xf0:
-      lookfor = Mf_toberead - readvarinum();
+      length = readvarinum();
+      if (length > Mf_toberead) length = Mf_toberead;
       msginit();
       msgadd(0xf0);
-      while(Mf_toberead >= lookfor) msgadd(c=egetc());
+      c = 0;
+      while (length-- > 0) msgadd(c=egetc());
       if (c == 0xf7 || Mf_nomerge == 0)
         sysex();
       else
         sysexcontinue = 1;
       break;
      case 0xf7:
-      lookfor = Mf_toberead - readvarinum();
+      length = readvarinum();
+      if (length > Mf_toberead) length = Mf_toberead;
       if (! sysexcontinue) msginit();
-      while (Mf_toberead >= lookfor)  msgadd(c=egetc());
+      c = 0;
+      while (length-- > 0)  msgadd(c=egetc());
       if (! sysexcontinue) {
         if (Mf_arbitrary) (*Mf_arbitrary)(msgleng(), msg());
       } else if (c == 0xf7) {
@@ -304,6 +325,16 @@ static void badbyte(int c) {
   mferror(buff);
 }
 
+/* Return data byte i of a meta payload, or 0 if the event is shorter than
+   the fixed-size layout requires. `leng` (== Msgindex) is exactly the number
+   of bytes msgadd() stored; checking i < leng first means a crafted SMF with
+   a short or zero-length meta event can never read past the payload (or
+   dereference Msgbuff while it is still NULL for a zero-length event). */
+static int metafield(char *m, int leng, int i) {
+
+  return (i < leng) ? (unsigned char) m[i] : 0;
+}
+
 static void metaevent(int type) {
 
   int leng = msgleng();
@@ -311,7 +342,8 @@ static void metaevent(int type) {
 
   switch (type) {
   case 0x00:
-    if (Mf_seqnum) (*Mf_seqnum)(to16bit(m[0], m[1]));
+    if (Mf_seqnum)
+      (*Mf_seqnum)(to16bit(metafield(m,leng,0), metafield(m,leng,1)));
     break;
   case 0x01:  /* Text event */
   case 0x02:  /* Copyright notice */
@@ -334,18 +366,23 @@ static void metaevent(int type) {
     if (Mf_eot) (*Mf_eot)();
     break;
   case 0x51:
-    if (Mf_tempo) (*Mf_tempo)(to32bit(0, m[0], m[1], m[2]));
+    if (Mf_tempo)
+      (*Mf_tempo)(to32bit(0, metafield(m,leng,0), metafield(m,leng,1),
+                  metafield(m,leng,2)));
     break;
   case 0x54:
     if (Mf_smpte)
-      (*Mf_smpte)(m[0], m[1], m[2], m[3], m[4]);
+      (*Mf_smpte)(metafield(m,leng,0), metafield(m,leng,1), metafield(m,leng,2),
+                  metafield(m,leng,3), metafield(m,leng,4));
     break;
   case 0x58:
     if (Mf_timesig)
-      (*Mf_timesig)(m[0], m[1], m[2], m[3]);
+      (*Mf_timesig)(metafield(m,leng,0), metafield(m,leng,1),
+                    metafield(m,leng,2), metafield(m,leng,3));
     break;
   case 0x59:
-    if (Mf_keysig) (*Mf_keysig)(m[0], m[1]);
+    if (Mf_keysig)
+      (*Mf_keysig)(metafield(m,leng,0), metafield(m,leng,1));
     break;
   case 0x7f:
     if (Mf_sqspecific) (*Mf_sqspecific)(leng, m);
@@ -378,16 +415,25 @@ static void chanmessage(int status, int c1, int c2) {
 static long readvarinum() {
 
   long value;
-  int c;
+  int c, n;
 
   c = egetc();
   value = c;
   if (c & 0x80) {
     value &= 0x7f;
+    /* SMF variable-length quantities are at most 4 bytes (28 bits). Cap the
+       loop so a crafted run of continuation bytes can't shift `value` past
+       the width of a long (undefined behaviour). */
+    n = 1;
     do {
       c = egetc();
       value = (value << 7) + (c & 0x7f);
-    } while (c & 0x80);
+    } while ((c & 0x80) && ++n < 4);
+    /* A valid VLQ is at most 4 bytes; if the 4th still sets the continuation
+       bit the quantity is malformed. Reject rather than silently returning and
+       leaving stray continuation bytes to desync the event stream. */
+    if (c & 0x80)
+      mferror("invalid variable-length quantity");
   }
   return (value);
 }
@@ -553,10 +599,13 @@ int mf_w_midi_event(
   unsigned char c;
 
   WriteVarLen(delta_time);
+
+  if (chan > 15) {
+    fprintf(stderr, "error: MIDI channel %u out of range, masking to 0-15\n", chan);
+    chan &= 0x0f;
+  }
   c = type | chan;
 
-  if(chan > 15)
-    perror("error: MIDI channel greater than 16\n");
   if (!Mf_RunStat || laststat != c)
     eputc(c);
   laststat = c;
@@ -593,6 +642,10 @@ int mf_w_sysex_event(
 
   int i;
 
+  if (size < 1) {
+    fprintf(stderr, "error: empty SysEx/Arb event ignored\n");
+    return 0;
+  }
   WriteVarLen(delta_time);
   eputc(*data);
   laststat = 0;
@@ -709,6 +762,9 @@ void myheader(int format, int ntrks, int division) {
     exit (1);
   }
   Beat = Clicks = division;
+  /* A zero (or SMPTE-negative) division would make Beat a zero divisor in
+     prtime() under -t; keep it >= 1 so a crafted MThd can't cause a SIGFPE. */
+  if (Beat < 1) Beat = 1;
   TrksToDo = ntrks;
 }
 
@@ -832,13 +888,19 @@ void mytimesig(int nn, int dd, int cc, int bb) {
 
   int denom = 1;
 
+  /* dd is an attacker-controlled byte; cap the shift so denom stays sane and
+     positive (a huge dd would overflow int / yield a bogus divisor). */
+  if (dd > 24) dd = 24;
   while (dd-- > 0) denom *= 2;
   prtime();
   printf("TimeSig %d/%d %d %d\n", nn, denom, cc, bb);
+  /* Beat/Measure are kept >= 1 below, so this divisor is never zero. */
   M0 += (Mf_currtime-T0)/(Beat*Measure);
   T0 = Mf_currtime;
   Measure = nn;
+  if (Measure < 1) Measure = 1;
   Beat = 4 * Clicks / denom;
+  if (Beat < 1) Beat = 1;
 }
 
 void mysmpte(int hr, int mn, int se, int fr, int ff) {
@@ -1011,6 +1073,36 @@ void prs_error(char *s) {
     longjmp(erjump, 1);
 }
 
+/* Recoverable parse/validation error (the compile path). Historically the
+   code called a bare error() that was never defined and silently linked to
+   glibc's error(int,int,const char*,...) — undefined behaviour that left
+   range checks non-aborting, so callers proceeded to write attacker-controlled
+   out-of-range data and reach divide-by-zero / NULL-deref paths. This is the
+   real definition: report, resync to end of line, then recover via longjmp
+   inside a track (err_cont) or exit otherwise. It never returns. */
+void mc_error(char *s) {
+
+  int c, count;
+  int ln = (eol_seen ? lineno-1 : lineno);
+
+  fprintf(stderr, "%d: %s\n", ln, s);
+  if (!eol_seen) {
+    count = 0;
+    while (count < 100 && (c=yylex()) != EOL && c != EOF) count++;
+    if (c == EOF) exit(1);
+  }
+  if (err_cont)
+    longjmp(erjump, 1);
+  exit(1);
+}
+
+/* Unrecoverable error (resource exhaustion etc.) — always fatal. */
+void fatal(char *s) {
+
+  fprintf(stderr, "Fatal: %s\n", s);
+  exit(1);
+}
+
 void syntax() {
 
   prs_error("Syntax error");
@@ -1022,8 +1114,23 @@ void translate() {
     Format = getint("MFile format");
     Ntrks = getint("MFile #tracks");
     Clicks = getint("MFile Clicks");
-    if (Clicks < 0)
-      Clicks = (Clicks&0xff)<<8|getint("MFile SMPTE division");
+    if (Clicks < 0) {
+      /* SMPTE division: negative frames/sec (high byte, -128..-1) and
+         ticks/frame (low byte, 0..255). Validate both operands BEFORE the
+         bitwise OR so a malformed resolution can't slip a bogus value
+         through; the reconstructed 16-bit value is 0x8000..0xffff. */
+      int res;
+      if (Clicks < -128)
+        error("MFile SMPTE frames/sec out of range");
+      res = getint("MFile SMPTE division");
+      if (res < 0 || res > 255)
+        error("MFile SMPTE ticks/frame out of range (0..255)");
+      Clicks = ((Clicks & 0xff) << 8) | res;
+    } else if (Clicks > 32767) {
+      error("MFile division out of range (0..32767)");
+    }
+    /* Clicks is now a 16-bit value (0..65535); this keeps the later
+       4 * Clicks / denom (TimeSig) computation from overflowing int. */
     checkeol();
     mfwrite(Format, Ntrks, Clicks, F);
   } else {
@@ -1057,11 +1164,18 @@ static int mywritetrack() {
       checkeol();
       return 1;
      case INT:
+      /* Bound every parsed time component to the 28-bit SMF range before it
+         feeds the measure/beat multiplications, so a hostile but parseable
+         long can't signed-overflow newtime (undefined behaviour). */
       newtime = yyval;
+      if (newtime < 0 || newtime > 0x0fffffffL)
+        prs_error("Time value out of range");
       if ((opcode = yylex()) == '/') {
         if (yylex() != INT) prs_error("Illegal time value");
+        if (yyval < 0 || yyval > 0x0fffffffL) prs_error("Time value out of range");
         newtime = (newtime - M0) * Measure + yyval;
         if (yylex() != '/' || yylex() != INT) prs_error("Illegal time value");
+        if (yyval < 0 || yyval > 0x0fffffffL) prs_error("Time value out of range");
         newtime = T0 + newtime * Beat + yyval;
         opcode = yylex();
       }
@@ -1114,6 +1228,9 @@ static int mywritetrack() {
           int nn, denom, cc, bb;
           if (yylex() != INT || yylex() != '/') syntax();
           nn = yyval;
+          /* numerator is written as one byte and also becomes Measure (a
+             multiplier in time math); keep it in a sane byte range. */
+          if (nn < 1 || nn > 255) error("TimeSig numerator out of range (1..255)");
           denom = getbyte("Denom");
           cc = getbyte("clocks per click");
           bb = getbyte("32nd notes per 24 clocks");
@@ -1123,10 +1240,15 @@ static int mywritetrack() {
           data[1] = i;
           data[2] = cc;
           data[3] = bb;
+          /* Beat/Measure are kept >= 1 (below and via the initial main()
+             defaults), so this divisor is never zero even for a hostile
+             header with a tiny Clicks or a zero/negative numerator. */
           M0 += (newtime - T0) / (Beat * Measure);
           T0 = newtime;
           Measure = nn;
+          if (Measure < 1) Measure = 1;
           Beat = 4 * Clicks / denom;
+          if (Beat < 1) Beat = 1;
           mf_w_meta_event(delta, time_signature, data, 4L);
         }
         break;
@@ -1158,7 +1280,14 @@ static int mywritetrack() {
            case LYRIC:
            case MARKER:
            case CUE: type -= (META+1); break;
-           case INT: type = yyval; break;
+           case INT:
+            /* Accept any 0..255 meta type to match the decoder (which
+               round-trips arbitrary meta bytes via Mf_metamisc); reject
+               larger values rather than silently truncating to a byte. */
+            if (yyval < 0 || yyval > 255)
+              error("Meta type must be between 0 and 255");
+            type = yyval;
+            break;
            default: prs_error("Illegal Meta type");
           }
           if (type == end_of_track)
@@ -1311,7 +1440,7 @@ static void gethex() {
         buffer = realloc(buffer, bufsiz);
       else
         buffer = malloc (bufsiz);
-      if (! buffer) error("Out of memory");
+      if (! buffer) fatal("Out of memory");
     }
     while(i < yyleng - 1) {
       c = yytext[i++];
@@ -1343,8 +1472,10 @@ rescan:
           buffer = realloc(buffer, bufsiz);
         else
            buffer = malloc(bufsiz);
-        if (! buffer) error ("Out of memory");
+        if (! buffer) fatal("Out of memory");
       }
+      if (yyval < 0 || yyval > 255)
+        error("hex byte must be between 0 and 255");
       buffer[buflen++] = yyval;
       c = yylex();
     } while (c == INT);
@@ -1366,6 +1497,11 @@ long bankno (char *s, int n) {
       c -= 'A';
     else
       c -= '1';
+    /* This runs inside yylex() over an attacker-controlled token length, so
+       use fatal() (NOT the recoverable error(), which re-enters yylex()) and
+       reject before res * 8 + c can signed-overflow a long. */
+    if (res > (LONG_MAX - c) / 8)
+      fatal("bank number out of range");
     res = res * 8 + c;
   }
   return res;
@@ -1394,7 +1530,7 @@ int filegetc() {
 }
 
 /***
-* Version: v0.1.0 20260613
+* Version: v0.2.0 20260613
 * License: MIT - see LICENSE file
 * Copyright: 2003-2026 Mark Constable (markc@renta.net)
 * Co-authored-by: Claude Code, Codex

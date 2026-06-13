@@ -252,7 +252,12 @@ void translate();
 void initfuncs();
 void mfread();
 void mferror();
-void error();
+void mc_error(char *);
+void fatal(char *);
+/* error() is the project's recoverable parse/validation error. It is NOT
+   glibc's error(3): map it to our mc_error() so a single definition serves
+   both midicomp.c and the generated lexer (which also calls error()). */
+#define error mc_error
 
 void mymseq();
 void mymeot();
@@ -269,7 +274,7 @@ void prs_error();
 void syntax();
 
 /***
-* Version: v0.1.0 20260613
+* Version: v0.2.0 20260613
 * License: MIT - see LICENSE file
 * Copyright: 2003-2026 Mark Constable (markc@renta.net)
 * Co-authored-by: Claude Code, Codex

@@ -37,7 +37,7 @@ or other interpreter needed, so it runs anywhere CMake does). After building, ru
 cd build && ctest --output-on-failure
 ```
 
-Four checks, all using the committed `ex1.mid` sample and its golden text files:
+Six checks:
 
 - **plain** — `midicomp ex1.mid` byte-matches `ex1-plain.txt`.
 - **verbose** — `midicomp -v -t ex1.mid` byte-matches `ex1-verbose.txt`. Note the
@@ -49,6 +49,16 @@ Four checks, all using the committed `ex1.mid` sample and its golden text files:
   Note: a recompiled `ex1.mid` is NOT byte-identical to the original, because the
   original uses MIDI running status (omitted repeated status bytes) which midicomp
   expands to explicit status on write. Byte-stability only holds from gen-1 onward.
+- **smpte** — a SMPTE-division header (`MFile 0 1 -25 40`) compiles and round-trips.
+  Regression guard: a too-strict division bound once rejected valid SMPTE.
+- **security** — replays the adversarial corpus in `tests/fixtures/` (malformed
+  SMF that previously crashed the decoder, and out-of-range compile inputs) and
+  asserts midicomp exits cleanly (0 or 1) with no signal/crash.
+
+Note `ex1.mid` itself is a useful *malformed* fixture: its TimeSig is only 2 bytes,
+so the golden TimeSig line is `4/4 0 0` (the missing bytes are zero-padded). Older
+midicomp printed `4/4 32 99` by reading stale heap out of bounds — that info-leak
+bug is fixed.
 
 This is pre-ANSI K&R C (empty-parens prototypes, implicit declarations) and will NOT
 compile under a modern compiler's default C standard. `CMakeLists.txt` pins
@@ -81,6 +91,23 @@ helpers (`checkchan`, `getint`, `gethex`, `splitval`) consume the token stream a
 `main()` (midicomp.c) does getopt_long parsing and picks the direction. `yyread.c`
 provides `_yyread`, a CR-stripping read used by the lexer so DOS line endings parse.
 
+**Error handling (important).** There are three error paths, do not confuse them:
+- `mferror()` — fatal decode-path errors; calls the `Mf_error` callback then `exit(1)`.
+- `mc_error()` — the compile path's **recoverable** parse/validation error: prints
+  `line: msg`, resyncs to end of line, then `longjmp(erjump)` (when `err_cont` is set,
+  i.e. inside a track) or `exit(1)`. It never returns. Source code calls it as
+  `error(...)` via `#define error mc_error` in `midicomp.h`. This replaces an old
+  bare `error()` that was never defined and silently linked to glibc's `error(3)`.
+- `fatal()` — unrecoverable (out-of-memory, overflow). Prints and `exit(1)`. The
+  **lexer** maps `error` → `fatal` (via `t2mf.h`), NOT mc_error, because lexer errors
+  fire inside `yylex()` and mc_error itself calls `yylex()` (reentrancy hazard).
+  `bankno()` also uses `fatal()` for the same reason.
+
+Untrusted-input safety lives in `metafield()` (bounds/zero-pads short meta events),
+the length-counted meta/sysex read loops in `readtrack()`, the VLQ cap in
+`readvarinum()`, and the range/overflow guards in the compile `check*`/`get*` helpers
+and `translate()`. See the Security section in `README.md`.
+
 ## Editing the grammar
 
 `t2mflex.c` is a **generated** flex output but is committed, so a normal build does NOT
@@ -90,13 +117,17 @@ need flex installed. Only regenerate it when changing the text grammar in `t2mf.
 flex -i -s -Ce t2mf.fl && mv lex.yy.c t2mflex.c
 ```
 
-The token IDs in `t2mf.h` and `midicomp.h` must stay in sync with what the lexer
+The current `t2mflex.c` was regenerated with flex 2.6.4. `t2mf.fl` carries
+`%option noyywrap` (modern flex needs it; the old default `#define yywrap() 1` is
+gone), and its integer rules use `strtol`/`strtoul` (not `sscanf`, whose overflow is
+UB). The token IDs in `t2mf.h` and `midicomp.h` must stay in sync with what the lexer
 returns and what `mywritetrack()` expects.
 
 ## Gotchas
 
-- The `VERSION` file (0.0.5) lags the README/source version (0.0.8) — README is
-  authoritative for the user-facing version.
+- The version string lives in several places (`VERSION`, the `usage` banner and
+  footer in `midicomp.c`, `midicomp.h` footer, `CMakeLists.txt` `project(... VERSION)`,
+  and the README header + changelog). Bump them together on release.
 - Two near-duplicate token-definition headers exist: `midicomp.h` (current) and
   `t2mf.h` (legacy, included by `t2mf.fl`). Keep both consistent if you touch token IDs.
 - The MIDI event names map to status bytes via `#define`s (e.g. `ON` = `note_on` =

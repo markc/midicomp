@@ -1,0 +1,4 @@
+MFile 1 1 96
+MTrk
+0 On ch=1 n=60 v=200
+TrkEnd

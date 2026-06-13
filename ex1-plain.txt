@@ -3,7 +3,7 @@ MTrk
 0 Meta SeqName "Track 1"
 0 On ch=1 n=48 v=70
 0 Tempo 500000
-0 TimeSig 4/4 32 99
+0 TimeSig 4/4 0 0
 96 On ch=1 n=48 v=0
 96 On ch=1 n=50 v=70
 192 On ch=1 n=50 v=0
