@@ -151,7 +151,7 @@ static int TrkNr;
 static int Format, Ntrks;
 static int Measure, M0, Beat, Clicks;
 static long T0;
-static char* buffer     = 0;
+static unsigned char* buffer     = 0;
 static int buflen,bufsiz= 0;
 
 extern long yyval;
@@ -174,7 +174,7 @@ static void checkeol();
 static void gethex();
 
 int (*Mf_getc)()        = NULLFUNC;
-int (*Mf_error)()       = NULLFUNC;
+void (*Mf_error)()      = NULLFUNC;
 void (*Mf_header)()      = NULLFUNC;
 void (*Mf_starttrack)()  = NULLFUNC;
 void (*Mf_endtrack)()    = NULLFUNC;
@@ -200,9 +200,9 @@ void (*Mf_text)()        = NULLFUNC;
 static void badbyte();
 
 static int readtrack();
-static int metaevent();
-static int sysex();
-static int chanmessage();
+static void metaevent();
+static void sysex();
+static void chanmessage();
 static int msgleng();
 
 static void msginit();
@@ -232,9 +232,8 @@ static int to16bit();
 static char *msg();
 static void readheader();
 
-static int verbose_flag;
 static int dbg=0;
-char data[5];
+unsigned char data[5];
 int chan;
 int Mf_RunStat = 0;
 static int laststat;
@@ -243,6 +242,9 @@ int verbose = 0;
 
 int filegetc();
 int fileputc();
+int getint();
+int getbyte();
+int yylex();
 void WriteVarLen();
 int eputc(unsigned char);
 

@@ -1,6 +1,9 @@
 /* $Id: t2mf.h,v 1.2 1991/11/03 21:50:50 piet Rel $ */
 #include "midifile.h"
 #include <stdlib.h>
+#include <unistd.h>
+
+void error();
 
 #define MTHD	256
 #define MTRK	257

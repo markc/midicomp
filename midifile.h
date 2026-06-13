@@ -1,16 +1,5 @@
 /* $Id: midifile.h,v 1.3 1991/11/03 21:50:50 piet Rel $ */
 
-static void badbyte();
-
-static int readtrack();
-static int metaevent();
-static int sysex();
-static int chanmessage();
-static int msginit();
-static int msgleng();
-static int msgadd();
-static int biggermsg();
-
 /* definitions for MIDI file parsing code */
 extern int (*Mf_getc)();
 extern int (*Mf_header)();
@@ -34,7 +23,7 @@ extern int (*Mf_smpte)();
 extern int (*Mf_tempo)();
 extern int (*Mf_keysig)();
 extern int (*Mf_arbitrary)();
-extern int (*Mf_error)();
+extern void (*Mf_error)();
 extern long Mf_currtime;
 extern int Mf_nomerge;
 

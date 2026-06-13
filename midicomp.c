@@ -39,6 +39,7 @@ To translate a plain ascii formatted file to SMF: \n\
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "midicomp.h"
 
 int main(int argc, char **argv) {
@@ -164,6 +165,7 @@ if (dbg) fprintf(stderr, "Compiling %s to %s\n", infile, outfile);
     if (ferror(F)) error ("Output file error");
     fclose(F);
   }
+  return 0;
 }
 
 void mfread() {
@@ -302,7 +304,7 @@ static void badbyte(int c) {
   mferror(buff);
 }
 
-static int metaevent(int type) {
+static void metaevent(int type) {
 
   int leng = msgleng();
   char *m = msg();
@@ -353,12 +355,12 @@ static int metaevent(int type) {
   }
 }
 
-static int sysex() {
+static void sysex() {
 
   if (Mf_sysex) (*Mf_sysex)(msgleng(), msg());
 }
 
-static int chanmessage(int status, int c1, int c2) {
+static void chanmessage(int status, int c1, int c2) {
 
   int chan = status & 0xf;
 
@@ -685,7 +687,7 @@ char *mknote(int pitch) {
 
   static char * Notes [] =
     {"c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"};
-  static char buf[5];
+  static char buf[16];
   if ( notes )
     sprintf (buf, "%s%d", Notes[pitch % 12], pitch/12);
   else
@@ -848,7 +850,7 @@ void mysmpte(int hr, int mn, int se, int fr, int ff) {
 void myarbitrary(int leng, char *mess) {
 
   prtime();
-  printf("Arb", leng);
+  printf("Arb");
   prhex(mess, leng);
 }
 
@@ -959,10 +961,10 @@ void prhex(unsigned char *p, int leng) {
   printf("\n");
 }
 
-myerror(char *s) {
+void myerror(char *s) {
 
   if (TrksToDo <= 0)
-    fprintf(stderr, "Error: Garbage at end\n", s);
+    fprintf(stderr, "Error: Garbage at end\n");
   else
     fprintf(stderr, "Error: %s\n", s);
 }
@@ -1185,7 +1187,7 @@ static int mywritetrack() {
   }
 }
 
-getbyte(char *mess) {
+int getbyte(char *mess) {
 
   char ermesg[100];
 
@@ -1198,7 +1200,7 @@ getbyte(char *mess) {
   return yyval;
 }
 
-getint(char *mess) {
+int getint(char *mess) {
 
   char ermesg[100];
   if (yylex() != INT) {
@@ -1381,7 +1383,7 @@ if (dbg) fprintf(stderr, "efopen(%s, %s)\n", name, mode);
   return(f);
 }
 
-fileputc(int c) {
+int fileputc(int c) {
 
   return putc(c, F);
 }

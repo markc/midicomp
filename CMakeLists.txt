@@ -20,6 +20,16 @@ set(midicomp_executable_HDRS
   t2mf.h
 )
 add_executable(midicomp ${midicomp_executable_SRCS})
+
+# Our hand-written sources (midicomp.c, yyread.c) compile warning-clean under -Wall.
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(midicomp PRIVATE -Wall)
+  # t2mflex.c is flex-generated; flex always emits char-subscript table lookups
+  # and unused input()/yyunput() helpers. Suppress only those on that one file.
+  set_source_files_properties(t2mflex.c PROPERTIES
+    COMPILE_OPTIONS "-Wno-char-subscripts;-Wno-unused-function")
+endif()
+
 install(TARGETS midicomp DESTINATION bin)
 
 # --- Tests (run with: cmake .. && make && ctest) -----------------------------
