@@ -1,6 +1,6 @@
 # midicomp
 
-##### v0.0.8 20170315 markc@renta.net (MIT)
+##### v0.1.0 20260613 markc@renta.net (MIT)
 
 A program to manipulate SMF (Standard MIDI File) files. `midicomp` will
 both read and write SMF files in 0 or format 1 and also read and write
@@ -35,7 +35,7 @@ ctest --output-on-failure
 
 ### Changes
 
-* v0.0.9 20260613 Relicensed to MIT, fixed CMake 3.10+ build, added CTest suite
+* v0.1.0 20260613 Relicensed to MIT, fixed CMake 3.10+ build, added CTest suite, warning-clean -Wall build
 * v0.0.8 20170315 Added unistd.h include to yyread.c
 * v0.0.7 20120724 Added incremental option for time tags [Alexandre Oberlin]
 * v0.0.6 20110727 Compile as a CMake project, remove QMake pro files

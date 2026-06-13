@@ -269,7 +269,7 @@ void prs_error();
 void syntax();
 
 /***
-* Version: v0.0.6 20110727
+* Version: v0.1.0 20260613
 * License: MIT - see LICENSE file
 * Copyright: 2003-2026 Mark Constable (markc@renta.net)
 * Co-authored-by: Claude Code, Codex

@@ -1,7 +1,7 @@
-# CMakeLists.txt v0.0.6 20110727 (C) markc@renta.net (MIT)
+# CMakeLists.txt v0.1.0 20260613 (C) markc@renta.net (MIT)
 
 cmake_minimum_required(VERSION 3.10)
-project(midicomp C)
+project(midicomp VERSION 0.1.0 LANGUAGES C)
 
 # This is pre-ANSI K&R C; build it as gnu89 so modern compilers accept the
 # empty-parens prototypes and implicit declarations.
