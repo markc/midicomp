@@ -13,6 +13,16 @@ any script language, and "recompiled" back into a binary SMF file.
 * Co-authored-by: Claude Code, Codex
 * Originally based on mf2t/t2fm by Piet van Oostrum
 
+### Download
+
+A prebuilt Linux x86-64 binary is attached to the latest release:
+
+* [midicomp-0.1.0-linux-x86_64](https://github.com/markc/midicomp/releases/download/v0.1.0/midicomp-0.1.0-linux-x86_64)
+  ([sha256](https://github.com/markc/midicomp/releases/download/v0.1.0/midicomp-0.1.0-linux-x86_64.sha256))
+
+See all releases at https://github.com/markc/midicomp/releases. For other
+platforms, build from source below.
+
 ### To Build from Source
 ```
 git clone https://github.com/markc/midicomp
